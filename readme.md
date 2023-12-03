@@ -26,5 +26,5 @@ pip install fastapi
 ```
 Then, uvicorn installation
 ```bash
-pip install fastapi
+pip install uvicorn
 ```

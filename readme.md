@@ -9,11 +9,22 @@ Create a virtual environment
 ```bash
 python3 -m venv virtualEnvironmentName
 ```
-For MacOS and Linux users, activate the virtual environment with the following command
+For **MacOS** and **Linux** users, activate the virtual environment with the following command
 ```bash
 source virtualEnvironmentName/bin/activate
 ```
-For Windows users, activate the virtual environment with the following command
+For **Windows** users, activate the virtual environment with the following command
 ```bash
 virtualEnvironmentName/Scripts/activate
+```
+
+Great! Now that the virtual environment is activated, we can install *FastAPI* and *uvicorn*.
+
+FastAPI installation
+```bash
+pip install fastapi
+```
+Then, uvicorn installation
+```bash
+pip install fastapi
 ```

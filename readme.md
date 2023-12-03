@@ -18,7 +18,7 @@ For **Windows** users, activate the virtual environment with the following comma
 virtualEnvironmentName/Scripts/activate
 ```
 
-Great! Now that the virtual environment is activated, we can install *FastAPI* and *uvicorn*.
+> "Great! Now that the virtual environment is activated, we can install *FastAPI* and *uvicorn*."
 
 FastAPI installation
 ```bash

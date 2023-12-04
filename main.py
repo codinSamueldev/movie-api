@@ -33,6 +33,10 @@ movies = [
 ]
 
 
+class Item():
+    name: str
+    description: str | None = None
+
 #Tags=[] help us to separate each endpoint in the documentation so we can see, verify and test each endpoint.
 @app.get('/', tags=["CAsita"])
 def message():
@@ -85,7 +89,7 @@ def get_movies_by_category(category: str):
     return "Ni un brillo pelao"
 
 
-#Post method
+#POST method
 @app.post('/movies', tags=["Peliculas, chicles, tance"])
 def post_movie(id: int = Body(), nombre: str = Body(), año: int = Body(), categoria: str = Body(), reseña: float = Body()):
     
@@ -98,3 +102,9 @@ def post_movie(id: int = Body(), nombre: str = Body(), año: int = Body(), categ
     })
 
     return movies
+
+
+#PUT method
+@app.put('/movies/{id}', tags=["Peliculas, chicles, tance"])
+def update_movie(id: int, item: Item):
+    return {"Sample text": "Updated", "id": id}

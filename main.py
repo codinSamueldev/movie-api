@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Body
 from fastapi.responses import HTMLResponse
 
 app = FastAPI()
@@ -83,3 +83,18 @@ def get_movies_by_category(category: str):
         if cat["categoria"] == category:
             return cat
     return "Ni un brillo pelao"
+
+
+#Post method
+@app.post('/movies', tags=["Peliculas, chicles, tance"])
+def post_movie(id: int = Body(), nombre: str = Body(), año: int = Body(), categoria: str = Body(), reseña: float = Body()):
+    
+    movies.append({
+        "id": id,
+        "nombre": nombre,
+        "año": año,
+        "categoria": categoria,
+        "reseña": reseña
+    })
+
+    return movies

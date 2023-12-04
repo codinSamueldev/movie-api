@@ -69,12 +69,12 @@ def get_movie(id: int):
             return item
     return None
 
-"""No se pudo :d"""
-@app.get('/movies/{nombre}', tags=["Peliculas, chicles, tance"])
-#Set up id in the function parameter and specify its type
+""" Ya se pudo :D con parametros query"""
+@app.get('/name/', tags=["Peliculas, chicles, tance"])
 def get_movie_by_name(nombre: str):
-    #Iterate dictionary.
-    for item in movies:
-        if item["nombre"] == nombre:
-            return item["nombre"]
-    return None
+    return nombre
+
+
+@app.get('/movies/', tags=["Peliculas, chicles, tance"])
+def get_movies_by_category(category: str):
+    return category

@@ -71,10 +71,15 @@ def get_movie(id: int):
 
 """ Ya se pudo :D con parametros query"""
 @app.get('/name/', tags=["Peliculas, chicles, tance"])
-def get_movie_by_name(nombre: str):
-    return nombre
+def get_movie_by_name(nombre: str, year: str, category: str):
+
+    categories = [cat for cat in movies if cat["categoria"] == category]
+    return nombre, year, categories
 
 
 @app.get('/movies/', tags=["Peliculas, chicles, tance"])
 def get_movies_by_category(category: str):
-    return category
+    for cat in movies:
+        if cat["categoria"] == category:
+            return cat
+    return "Ni un brillo pelao"

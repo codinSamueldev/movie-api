@@ -15,6 +15,20 @@ movies = [
         "año" : 2003,
         "categoria" : "Humor/Risa/Comedia",
         "reseñas" : 9.9
+    },
+    {
+        "id" : 2,
+        "nombre" : "Avengers Endgame",
+        "año" : 2018,
+        "categoria" : "Acción/Sci-Fi/Tragedia",
+        "reseñas" : 9
+    },
+    {
+        "id" : 3,
+        "nombre" : "Chicken Little",
+        "año" : 2005,
+        "categoria" : "Humor/Risa/Reflexion",
+        "reseñas" : 10
     }
 ]
 
@@ -30,7 +44,7 @@ def message():
     return {"Testeo": "Si funciona"}
 
 #Return HTML code
-@app.get('/html')
+@app.get('/html', tags=["HTML"])
 def message():
     return HTMLResponse("""
 
@@ -43,3 +57,24 @@ def message():
 @app.get('/movies', tags=["Peliculas, chicles, tance"])
 def get_movies():
     return movies
+
+
+#Get movie by id.
+@app.get('/movies/{id}', tags=["Peliculas, chicles, tance"])
+#Set up id in the function parameter and specify its type
+def get_movie(id: int):
+    #Iterate dictionary.
+    for item in movies:
+        if item["id"] == id:
+            return item
+    return None
+
+"""No se pudo :d"""
+@app.get('/movies/{nombre}', tags=["Peliculas, chicles, tance"])
+#Set up id in the function parameter and specify its type
+def get_movie_by_name(nombre: str):
+    #Iterate dictionary.
+    for item in movies:
+        if item["nombre"] == nombre:
+            return item["nombre"]
+    return None

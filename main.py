@@ -1,5 +1,7 @@
 from fastapi import FastAPI, Body
 from fastapi.responses import HTMLResponse
+from pydantic import BaseModel
+from typing import Optional
 
 app = FastAPI()
 #Update the title of our API.
@@ -7,6 +9,14 @@ app.title = "Basic API"
 #Also, we can modify its actual version.
 app.version = "0.0.0.1"
 
+
+class Movie(BaseModel):
+    #Set up atributtes
+    id: Optional[int] = None
+    nombre: str
+    año: int
+    categoria: str
+    reseñas: int
 
 movies = [
     {
@@ -32,10 +42,6 @@ movies = [
     }
 ]
 
-
-class Item():
-    name: str
-    description: str | None = None
 
 #Tags=[] help us to separate each endpoint in the documentation so we can see, verify and test each endpoint.
 @app.get('/', tags=["CAsita"])
@@ -91,20 +97,31 @@ def get_movies_by_category(category: str):
 
 #POST method
 @app.post('/movies', tags=["Peliculas, chicles, tance"])
-def post_movie(id: int = Body(), nombre: str = Body(), año: int = Body(), categoria: str = Body(), reseña: float = Body()):
+def post_movie(movie: Movie):
     
-    movies.append({
-        "id": id,
-        "nombre": nombre,
-        "año": año,
-        "categoria": categoria,
-        "reseña": reseña
-    })
+    movies.append(movie)
 
     return movies
 
 
 #PUT method
 @app.put('/movies/{id}', tags=["Peliculas, chicles, tance"])
-def update_movie(id: int):
-    return {"Sample text": "Updated", "id": id}
+#Specify which items would you like to update
+def update_movie(id: int, movie: Movie):
+    
+    for item in movies:
+        if item["id"] == id:
+            item["nombre"] = movie.nombre
+            item["año"] = movie.año
+            item["categoria"] = movie.categoria
+            item["reseñas"] = movie.reseñas
+            return movies
+    return None
+
+    
+@app.delete('/movies/{id}', tags=["Peliculas, chicles, tance"])
+def delete_movie(id: int):
+    for item in movies:
+        if item["id"] == id:
+            movies.remove(item)
+    return movies

@@ -106,5 +106,5 @@ def post_movie(id: int = Body(), nombre: str = Body(), año: int = Body(), categ
 
 #PUT method
 @app.put('/movies/{id}', tags=["Peliculas, chicles, tance"])
-def update_movie(id: int, item: Item):
+def update_movie(id: int):
     return {"Sample text": "Updated", "id": id}

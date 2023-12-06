@@ -1,7 +1,7 @@
-from fastapi import FastAPI, Body
-from fastapi.responses import HTMLResponse
-from pydantic import BaseModel
-from typing import Optional
+from fastapi import FastAPI, Body, Path, Query
+from fastapi.responses import HTMLResponse, JSONResponse
+from pydantic import BaseModel, Field
+from typing import Optional, List
 
 app = FastAPI()
 #Update the title of our API.
@@ -13,10 +13,23 @@ app.version = "0.0.0.1"
 class Movie(BaseModel):
     #Set up atributtes
     id: Optional[int] = None
-    nombre: str
-    año: int
+    #Validate data with Field() class.
+    nombre: str = Field(min_length=3, max_length=15)
+    año: int = Field(le=2022)
     categoria: str
-    reseñas: int
+    reseñas: float
+
+    class Config:
+        #Seems like the name always should be schema_extra in order to represent an example.
+        schema_extra = {
+            "example": {
+                "id": 5,
+                "nombre": "Pelicula",
+                "año": 2012,
+                "categoria": "Tragico/Suspenso",
+                "reseñas": 6.6
+            }
+        }
 
 movies = [
     {
@@ -44,7 +57,7 @@ movies = [
 
 
 #Tags=[] help us to separate each endpoint in the documentation so we can see, verify and test each endpoint.
-@app.get('/', tags=["CAsita"])
+@app.get('/', tags=["Casita"])
 def message():
     return "Holiiii"
 
@@ -63,51 +76,51 @@ def message():
         <div style="background: black; width: 35%; height: 51%; border-radius: 35%"></div>
     </figure> """)
 
-
-@app.get('/movies', tags=["Peliculas, chicles, tance"])
-def get_movies():
-    return movies
+#We can modify what kind of response should give the API.
+@app.get('/movies', tags=["Peliculas, chicles, tance"], response_model=List[Movie])
+def get_movies() -> List[Movie]:
+    return JSONResponse(content=movies)
 
 
 #Get movie by id.
-@app.get('/movies/{id}', tags=["Peliculas, chicles, tance"])
-#Set up id in the function parameter and specify its type
-def get_movie(id: int):
+@app.get('/movies/{id}', tags=["Peliculas, chicles, tance"], response_model=Movie)
+#Set up id in the function parameter and specify its type. ge <- mininum, and le <- maximum. 
+def get_movie(id: int = Path(ge=1, le=2000)) -> Movie:
     #Iterate dictionary.
     for item in movies:
         if item["id"] == id:
-            return item
-    return None
+            return JSONResponse(content=item)
+    return JSONResponse("Ni un brillo pelao")
 
 """ Ya se pudo :D con parametros query"""
-@app.get('/name/', tags=["Peliculas, chicles, tance"])
-def get_movie_by_name(nombre: str, year: str, category: str):
+@app.get('/name/', tags=["Peliculas, chicles, tance"], response_model=List[Movie])
+def get_movie_by_name(nombre: str, year: str, category: str) -> List[Movie]:
 
     categories = [cat for cat in movies if cat["categoria"] == category]
     return nombre, year, categories
 
 
 @app.get('/movies/', tags=["Peliculas, chicles, tance"])
-def get_movies_by_category(category: str):
+def get_movies_by_category(category: str = Query(min_length=5, max_length=20)):
     for cat in movies:
         if cat["categoria"] == category:
-            return cat
+            return JSONResponse(content=cat)
     return "Ni un brillo pelao"
 
 
 #POST method
-@app.post('/movies', tags=["Peliculas, chicles, tance"])
-def post_movie(movie: Movie):
+@app.post('/movies', tags=["Peliculas, chicles, tance"], response_model=dict)
+def post_movie(movie: Movie) -> dict:
     
     movies.append(movie)
 
-    return movies
+    return JSONResponse(content={"message": "Se ha registrado la pelicula..."})
 
 
 #PUT method
-@app.put('/movies/{id}', tags=["Peliculas, chicles, tance"])
+@app.put('/movies/{id}', tags=["Peliculas, chicles, tance"], response_model=dict)
 #Specify which items would you like to update
-def update_movie(id: int, movie: Movie):
+def update_movie(id: int, movie: Movie) -> dict:
     
     for item in movies:
         if item["id"] == id:
@@ -115,13 +128,13 @@ def update_movie(id: int, movie: Movie):
             item["año"] = movie.año
             item["categoria"] = movie.categoria
             item["reseñas"] = movie.reseñas
-            return movies
-    return None
+            return JSONResponse(content={"message": "Se ha actualizado la pelicula..."})
+    return JSONResponse(content={"important message": "Ni un brillo pelao"})
 
     
-@app.delete('/movies/{id}', tags=["Peliculas, chicles, tance"])
-def delete_movie(id: int):
+@app.delete('/movies/{id}', tags=["Peliculas, chicles, tance"], response_model=dict)
+def delete_movie(id: int) -> dict:
     for item in movies:
         if item["id"] == id:
             movies.remove(item)
-    return movies
+    return JSONResponse(content={"message": "Se ha eliminado la pelicula..."})

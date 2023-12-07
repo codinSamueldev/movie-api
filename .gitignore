@@ -247,4 +247,7 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# PyJWT
+.jwt_manager.py
+
 # End of https://www.toptal.com/developers/gitignore/api/python,macos,windows,linux

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Body, Path, Query
+from fastapi import FastAPI, Body, Path, Query, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
 from typing import Optional, List
@@ -77,26 +77,30 @@ def message():
     </figure> """)
 
 #We can modify what kind of response should give the API.
-@app.get('/movies', tags=["Peliculas, chicles, tance"], response_model=List[Movie])
+@app.get('/movies', tags=["Peliculas, chicles, tance"], response_model=List[Movie], status_code=200)
 def get_movies() -> List[Movie]:
-    return JSONResponse(content=movies)
+    return JSONResponse(status_code=200, content=movies)
 
 
 #Get movie by id.
-@app.get('/movies/{id}', tags=["Peliculas, chicles, tance"], response_model=Movie)
+@app.get('/movies/{id}', tags=["Peliculas, chicles, tance"], response_model=Movie, status_code=200)
 #Set up id in the function parameter and specify its type. ge <- mininum, and le <- maximum. 
 def get_movie(id: int = Path(ge=1, le=2000)) -> Movie:
     #Iterate dictionary.
     for item in movies:
         if item["id"] == id:
             return JSONResponse(content=item)
+        else:
+            raise HTTPException(status_code=404, detail="Ni un brillo pelao, busca otro id")
     return JSONResponse("Ni un brillo pelao")
 
 """ Ya se pudo :D con parametros query"""
 @app.get('/name/', tags=["Peliculas, chicles, tance"], response_model=List[Movie])
-def get_movie_by_name(nombre: str, year: str, category: str) -> List[Movie]:
+def get_movie_by_name(nombre: str, year: int, category: str) -> List[Movie]:
 
     categories = [cat for cat in movies if cat["categoria"] == category]
+    if categories not in movies:
+        raise HTTPException(status_code=404, detail="Mani esa pelicula no existe")
     return nombre, year, categories
 
 
@@ -109,12 +113,12 @@ def get_movies_by_category(category: str = Query(min_length=5, max_length=20)):
 
 
 #POST method
-@app.post('/movies', tags=["Peliculas, chicles, tance"], response_model=dict)
+@app.post('/movies', tags=["Peliculas, chicles, tance"], response_model=dict, status_code=201)
 def post_movie(movie: Movie) -> dict:
     
     movies.append(movie)
 
-    return JSONResponse(content={"message": "Se ha registrado la pelicula..."})
+    return JSONResponse(content={"message": "Se ha registrado la pelicula..."}, status_code=201)
 
 
 #PUT method

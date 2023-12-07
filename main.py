@@ -2,6 +2,7 @@ from fastapi import FastAPI, Body, Path, Query, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
 from typing import Optional, List
+from jwt_manager import create_token
 
 app = FastAPI()
 #Update the title of our API.
@@ -9,6 +10,18 @@ app.title = "Basic API"
 #Also, we can modify its actual version.
 app.version = "0.0.0.1"
 
+
+class User(BaseModel):
+    email: str
+    password: str
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "email": "johndoe@example.com",
+                "password": "*********"
+            }
+        }
 
 class Movie(BaseModel):
     #Set up atributtes
@@ -80,6 +93,11 @@ def message():
 @app.get('/movies', tags=["Peliculas, chicles, tance"], response_model=List[Movie], status_code=200)
 def get_movies() -> List[Movie]:
     return JSONResponse(status_code=200, content=movies)
+
+
+@app.post('/login', tags=["Auth"], status_code=200, response_model=User)
+def auth_user(user: User) -> User:
+    return user
 
 
 #Get movie by id.

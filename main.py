@@ -1,8 +1,11 @@
-from fastapi import FastAPI, Body, Path, Query, HTTPException
+from fastapi import FastAPI, Body, Path, Query, HTTPException, Depends
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
-from typing import Optional, List
-from jwt_manager_auth import create_token
+from typing import Any, Coroutine, Optional, List
+
+from starlette.requests import Request
+from jwt_manager_auth import validate_token, create_token
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 app = FastAPI()
 #Update the title of our API.
@@ -10,6 +13,13 @@ app.title = "Basic API"
 #Also, we can modify its actual version.
 app.version = "0.0.0.1"
 
+
+class JWTBearer(HTTPBearer):
+    async def __call__(self, request: Request) -> Coroutine[Any, Any, HTTPAuthorizationCredentials | None]:
+        auth = await super().__call__(request)
+        data = validate_token(auth.credentials)
+        if data['email'] != "johndoe@example.com":
+            raise HTTPException(status_code=403, detail="Credenciales invalidas")
 
 class User(BaseModel):
     email: str
@@ -90,7 +100,7 @@ def message():
     </figure> """)
 
 #We can modify what kind of response should give the API.
-@app.get('/movies', tags=["Peliculas, chicles, tance"], response_model=List[Movie], status_code=200)
+@app.get('/movies', tags=["Peliculas, chicles, tance"], response_model=List[Movie], status_code=200, dependencies=[Depends(JWTBearer)])
 def get_movies() -> List[Movie]:
     return JSONResponse(status_code=200, content=movies)
 

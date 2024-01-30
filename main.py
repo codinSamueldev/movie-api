@@ -2,13 +2,15 @@ import jwt_manager_auth
 from fastapi import FastAPI, Body, Path, Query, HTTPException, Depends
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
+from starlette import status
 from typing import Any, Coroutine, Optional, List, Annotated
 
 from starlette.requests import Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from config.database import SessionLocal, engine, Base
 from models.movie import Movie
-from jwt_manager_auth import oauth2_bearer
+from sqlalchemy.orm import Session
+from jwt_manager_auth import oauth2_bearer, get_current_user
 
 
 
@@ -100,6 +102,18 @@ def message():
     <figure>
         <div style="background: black; width: 35%; height: 51%; border-radius: 35%"></div>
     </figure> """)
+
+
+@app.get("/users/me", tags=["Users"], status_code=200)
+def user(current_user: Annotated[dict, Depends(get_current_user)]):
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, 
+            detail="User not found...", 
+            headers={"WWW-Authenticate": "Bearer"})
+    
+    return {"user": current_user}
+
 
 #We can modify what kind of response should give the API.
 @app.get('/movies', tags=["Peliculas, chicles, tance"], response_model=List[Movie], status_code=200)

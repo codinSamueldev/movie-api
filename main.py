@@ -162,7 +162,7 @@ def update_movie(id: int, movie: Movie) -> dict:
 
     
 @app.delete('/movies/{id}', tags=["Peliculas, chicles, tance"], response_model=dict)
-def delete_movie(id: int) -> dict:
+def delete_movie(id: int, token: Annotated[str, Depends(oauth2_bearer)]) -> dict:
     for item in movies:
         if item["id"] == id:
             movies.remove(item)

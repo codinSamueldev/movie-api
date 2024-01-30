@@ -1,25 +1,26 @@
+import jwt_manager_auth
 from fastapi import FastAPI, Body, Path, Query, HTTPException, Depends
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
-from typing import Any, Coroutine, Optional, List
+from typing import Any, Coroutine, Optional, List, Annotated
 
 from starlette.requests import Request
-from jwt_manager_auth import validate_token, create_token
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from config.database import SessionLocal, engine, Base
+from models.movie import Movie
+from jwt_manager_auth import oauth2_bearer
+
+
 
 app = FastAPI()
+app.include_router(jwt_manager_auth.router)
 #Update the title of our API.
 app.title = "Basic API"
 #Also, we can modify its actual version.
 app.version = "0.0.0.1"
 
+Base.metadata.create_all(bind=engine)
 
-class JWTBearer(HTTPBearer):
-    async def __call__(self, request: Request) -> Coroutine[Any, Any, HTTPAuthorizationCredentials | None]:
-        auth = await super().__call__(request)
-        data = validate_token(auth.credentials)
-        if data['email'] != "johndoe@example.com":
-            raise HTTPException(status_code=403, detail="Credenciales invalidas")
 
 class User(BaseModel):
     email: str
@@ -32,6 +33,7 @@ class User(BaseModel):
                 "password": "*********"
             }
         }
+
 
 class Movie(BaseModel):
     #Set up atributtes
@@ -100,17 +102,9 @@ def message():
     </figure> """)
 
 #We can modify what kind of response should give the API.
-@app.get('/movies', tags=["Peliculas, chicles, tance"], response_model=List[Movie], status_code=200, dependencies=[Depends(JWTBearer)])
-def get_movies() -> List[Movie]:
+@app.get('/movies', tags=["Peliculas, chicles, tance"], response_model=List[Movie], status_code=200)
+def get_movies(token: Annotated[str, Depends(oauth2_bearer)]) -> List[Movie]:
     return JSONResponse(status_code=200, content=movies)
-
-# User auth
-@app.post('/login', tags=["Auth"], status_code=200, response_model=User)
-def auth_user(user: User) -> User:
-    if user.email == "johndoe@example.com" and user.password == "*****":
-        token: str = create_token(dict(user))
-        return JSONResponse(content=token)
-    return user
 
 
 #Get movie by id.

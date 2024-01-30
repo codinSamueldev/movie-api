@@ -12,5 +12,5 @@ class Movie(Base):
     nombre = Column(String)
     año = Column(Integer)
     categoria = Column(String)
-    reseñas = Column(Flot(10, 3))
+    reseñas = Column(Float(10, 3))
 

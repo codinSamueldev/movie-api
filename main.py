@@ -8,7 +8,7 @@ from typing import Any, Coroutine, Optional, List, Annotated
 from starlette.requests import Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from config.database import SessionLocal, engine, Base
-from models.movie import Movie
+from models.movie import Movie as MovieModel
 from sqlalchemy.orm import Session
 from jwt_manager_auth import oauth2_bearer, get_current_user
 
@@ -50,7 +50,6 @@ class Movie(BaseModel):
         #Seems like the name always should be schema_extra in order to represent an example.
         schema_extra = {
             "example": {
-                "id": 5,
                 "nombre": "Pelicula",
                 "año": 2012,
                 "categoria": "Tragico/Suspenso",
@@ -154,8 +153,13 @@ def get_movies_by_category(category: str = Query(min_length=5, max_length=20)):
 #POST method
 @app.post('/movies', tags=["Peliculas, chicles, tance"], response_model=dict, status_code=201)
 def post_movie(movie: Movie) -> dict:
-    
-    movies.append(movie)
+
+    db = SessionLocal()
+    new_movie = MovieModel(**movie.dict())
+    db.add(new_movie)
+    db.commit()
+
+    # movies.append(movie)
 
     return JSONResponse(content={"message": "Se ha registrado la pelicula..."}, status_code=201)
 

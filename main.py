@@ -7,11 +7,14 @@ from typing import Any, Coroutine, Optional, List, Annotated
 
 from starlette.requests import Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.encoders import jsonable_encoder
 from config.database import SessionLocal, engine, Base
 from models.movie import Movie as MovieModel
 from sqlalchemy.orm import Session
 from jwt_manager_auth import oauth2_bearer, get_current_user
 
+
+DB = SessionLocal()
 
 
 app = FastAPI()
@@ -41,8 +44,8 @@ class Movie(BaseModel):
     #Set up atributtes
     id: Optional[int] = None
     #Validate data with Field() class.
-    nombre: str = Field(min_length=3, max_length=15)
-    año: int = Field(le=2022)
+    nombre: str = Field(min_length=3, max_length=90)
+    año: int = Field()
     categoria: str
     reseñas: float
 
@@ -117,47 +120,56 @@ def user(current_user: Annotated[dict, Depends(get_current_user)]):
 #We can modify what kind of response should give the API.
 @app.get('/movies', tags=["Peliculas, chicles, tance"], response_model=List[Movie], status_code=200)
 def get_movies(token: Annotated[str, Depends(oauth2_bearer)]) -> List[Movie]:
-    return JSONResponse(status_code=200, content=movies)
+    
+    result = DB.query(MovieModel).all()
+    
+    return JSONResponse(status_code=200, content=jsonable_encoder(result))
 
 
 #Get movie by id.
 @app.get('/movies/{id}', tags=["Peliculas, chicles, tance"], response_model=Movie, status_code=200)
 #Set up id in the function parameter and specify its type. ge <- mininum, and le <- maximum. 
 def get_movie(id: int = Path(ge=1, le=2000)) -> Movie:
-    #Iterate dictionary.
-    for item in movies:
-        if item["id"] == id:
-            return JSONResponse(content=item)
-        else:
-            raise HTTPException(status_code=404, detail="Ni un brillo pelao, busca otro id")
-    return JSONResponse("Ni un brillo pelao")
+
+    output_movie = DB.query(MovieModel).filter(id == MovieModel.id).first()
+    
+    if not output_movie:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid movie ID : (")
+      
+    return jsonable_encoder(output_movie)
 
 """ Ya se pudo :D con parametros query"""
 @app.get('/name/', tags=["Peliculas, chicles, tance"], response_model=List[Movie])
-def get_movie_by_name(nombre: str, year: int, category: str) -> List[Movie]:
+def get_movie_by_name(nombre: str,) -> Movie:
 
-    categories = [cat for cat in movies if cat["categoria"] == category]
-    if categories not in movies:
-        raise HTTPException(status_code=404, detail="Mani esa pelicula no existe")
-    return nombre, year, categories
+    output_movie = DB.query(MovieModel).filter(nombre == MovieModel.nombre).first()
+
+    if not output_movie:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid movie category : (")
+      
+    return JSONResponse(content=jsonable_encoder(output_movie), status_code=status.HTTP_200_OK)
+
 
 
 @app.get('/movies/', tags=["Peliculas, chicles, tance"])
 def get_movies_by_category(category: str = Query(min_length=5, max_length=20)):
-    for cat in movies:
-        if cat["categoria"] == category:
-            return JSONResponse(content=cat)
-    return "Ni un brillo pelao"
+    
+    output_movie = DB.query(MovieModel).filter(category == MovieModel.categoria).first()
+
+    if not output_movie:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid movie category : (")
+      
+    return JSONResponse(content=jsonable_encoder(output_movie), status_code=status.HTTP_200_OK)
 
 
 #POST method
 @app.post('/movies', tags=["Peliculas, chicles, tance"], response_model=dict, status_code=201)
 def post_movie(movie: Movie) -> dict:
 
-    db = SessionLocal()
+    DB = SessionLocal()
     new_movie = MovieModel(**movie.dict())
-    db.add(new_movie)
-    db.commit()
+    DB.add(new_movie)
+    DB.commit()
 
     # movies.append(movie)
 

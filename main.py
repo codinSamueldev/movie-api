@@ -15,6 +15,7 @@ from jwt_manager_auth import oauth2_bearer, get_current_user
 
 
 DB = SessionLocal()
+ID_EXCEPTION = HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid movie ID : (")
 
 
 app = FastAPI()
@@ -134,7 +135,7 @@ def get_movie(id: int = Path(ge=1, le=2000)) -> Movie:
     output_movie = DB.query(MovieModel).filter(id == MovieModel.id).first()
     
     if not output_movie:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid movie ID : (")
+        raise ID_EXCEPTION
       
     return jsonable_encoder(output_movie)
 
@@ -184,7 +185,7 @@ def update_movie(id: int, movie: Movie) -> dict:
     movie_to_update = DB.query(MovieModel).filter(id == MovieModel.id).first()
 
     if not movie_to_update:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid movie ID : (")
+        raise ID_EXCEPTION
     
     movie_to_update.nombre = movie.nombre
     movie_to_update.año = movie.año
@@ -197,7 +198,13 @@ def update_movie(id: int, movie: Movie) -> dict:
     
 @app.delete('/movies/{id}', tags=["Peliculas, chicles, tance"], response_model=dict)
 def delete_movie(id: int, token: Annotated[str, Depends(oauth2_bearer)]) -> dict:
-    for item in movies:
-        if item["id"] == id:
-            movies.remove(item)
-    return JSONResponse(content={"message": "Se ha eliminado la pelicula..."})
+    
+    movie_to_delete = DB.query(MovieModel).filter(id == MovieModel.id).first()
+
+    if not movie_to_delete:
+        raise ID_EXCEPTION
+    
+    DB.delete(movie_to_delete)
+    DB.commit()
+
+    return JSONResponse(content={"message": "Se ha eliminado la pelicula..."}, status_code=status.HTTP_200_OK)

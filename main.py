@@ -180,15 +180,19 @@ def post_movie(movie: Movie) -> dict:
 @app.put('/movies/{id}', tags=["Peliculas, chicles, tance"], response_model=dict)
 #Specify which items would you like to update
 def update_movie(id: int, movie: Movie) -> dict:
+
+    movie_to_update = DB.query(MovieModel).filter(id == MovieModel.id).first()
+
+    if not movie_to_update:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid movie ID : (")
     
-    for item in movies:
-        if item["id"] == id:
-            item["nombre"] = movie.nombre
-            item["año"] = movie.año
-            item["categoria"] = movie.categoria
-            item["reseñas"] = movie.reseñas
-            return JSONResponse(content={"message": "Se ha actualizado la pelicula..."})
-    return JSONResponse(content={"important message": "Ni un brillo pelao"})
+    movie_to_update.nombre = movie.nombre
+    movie_to_update.año = movie.año
+    movie_to_update.categoria = movie.categoria
+    movie_to_update.reseñas = movie.reseñas
+    DB.commit()
+
+    return JSONResponse(content={"message": "Se ha actualizado la pelicula..."}, status_code=status.HTTP_202_ACCEPTED)
 
     
 @app.delete('/movies/{id}', tags=["Peliculas, chicles, tance"], response_model=dict)

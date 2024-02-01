@@ -7,7 +7,7 @@ from typing import Optional, List, Annotated
 from fastapi.encoders import jsonable_encoder
 from config.database import SessionLocal
 from models.movie import Movie as MovieModel
-from jwt_manager_auth import oauth2_bearer
+from routers.jwt_manager_auth import oauth2_bearer
 
 
 DB = SessionLocal()

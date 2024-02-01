@@ -1,5 +1,4 @@
-import jwt_manager_auth
-from routers import movies
+from routers import movies, jwt_manager_auth
 from fastapi import FastAPI, Body, Path, Query, HTTPException, Depends
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
@@ -9,7 +8,7 @@ from typing import Any, Optional, List, Annotated
 from fastapi.encoders import jsonable_encoder
 from config.database import SessionLocal, engine, Base
 from models.movie import Movie as MovieModel
-from jwt_manager_auth import oauth2_bearer, get_current_user
+from routers.jwt_manager_auth import oauth2_bearer, get_current_user
 from middlewares.error_handler import ErrorHandler
 
 

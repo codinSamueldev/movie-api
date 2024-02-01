@@ -23,6 +23,8 @@ def get_all_users(token: Annotated[str, Depends(oauth2_bearer)]):
 
 @users_router.get("/me", status_code=200)
 def user(current_user: Annotated[dict, Depends(get_current_user)]):
+    """ Return current user logged in, if not found will raise HTTP exception. """
+
     if not current_user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, 

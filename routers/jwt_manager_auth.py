@@ -70,6 +70,8 @@ def create_access_token(username: str, user_id: int, token_expires: timedelta):
 
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
+    """ Validate and return current user logged in, if token error was catched return credentials exception. """
+
     try:
         payload = jwt.decode(token, key=SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")

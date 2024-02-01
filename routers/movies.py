@@ -41,7 +41,8 @@ class Movie(BaseModel):
 #We can modify what kind of response should give the API.
 @movies_router.get('/movies', tags=["Peliculas, chicles, tance"], response_model=List[Movie], status_code=200)
 def get_movies(token: Annotated[str, Depends(oauth2_bearer)]) -> List[Movie]:
-    
+    """ Retrieve all movies stored in database. """
+
     result = DB.query(MovieModel).all()
     
     return JSONResponse(status_code=200, content=jsonable_encoder(result))
@@ -51,19 +52,21 @@ def get_movies(token: Annotated[str, Depends(oauth2_bearer)]) -> List[Movie]:
 @movies_router.get('/movies/{id}', tags=["Peliculas, chicles, tance"], response_model=Movie, status_code=200)
 #Set up id in the function parameter and specify its type. ge <- mininum, and le <- maximum. 
 def get_movie(id: int = Path(ge=1, le=2000)) -> Movie:
+    """ Retrieve movie based on movie ID """
 
     output_movie = DB.query(MovieModel).filter(id == MovieModel.id).first()
     
     if not output_movie:
         raise ID_EXCEPTION
       
-    return jsonable_encoder(output_movie)
+    return JSONResponse(content=jsonable_encoder(output_movie), status_code=status.HTTP_200_OK)
 
 
 """ Ya se pudo :D con parametros query"""
 @movies_router.get('/name/', tags=["Peliculas, chicles, tance"], response_model=List[Movie])
 def get_movie_by_name(nombre: str,) -> Movie:
-
+    """ Retrieve movie based on movie name """
+    
     output_movie = DB.query(MovieModel).filter(nombre == MovieModel.nombre).first()
 
     if not output_movie:
@@ -74,7 +77,8 @@ def get_movie_by_name(nombre: str,) -> Movie:
 
 @movies_router.get('/movies/', tags=["Peliculas, chicles, tance"])
 def get_movies_by_category(category: str = Query(min_length=5, max_length=20)):
-    
+    """ Retrieve movie based on category """
+
     output_movie = DB.query(MovieModel).filter(category == MovieModel.categoria).first()
 
     if not output_movie:
@@ -86,6 +90,7 @@ def get_movies_by_category(category: str = Query(min_length=5, max_length=20)):
 #POST method
 @movies_router.post('/movies', tags=["Peliculas, chicles, tance"], response_model=dict, status_code=201)
 def post_movie(movie: Movie) -> dict:
+    """ Add new movie """
 
     new_movie = MovieModel(**movie.dict())
     DB.add(new_movie)
@@ -98,6 +103,7 @@ def post_movie(movie: Movie) -> dict:
 @movies_router.put('/movies/{id}', tags=["Peliculas, chicles, tance"], response_model=dict)
 #Specify which items would you like to update
 def update_movie(id: int, movie: Movie) -> dict:
+    """ Update movie parameters (name, year, category, rating) """
 
     movie_to_update = DB.query(MovieModel).filter(id == MovieModel.id).first()
 
@@ -115,6 +121,7 @@ def update_movie(id: int, movie: Movie) -> dict:
     
 @movies_router.delete('/movies/{id}', tags=["Peliculas, chicles, tance"], response_model=dict)
 def delete_movie(id: int, token: Annotated[str, Depends(oauth2_bearer)]) -> dict:
+    """ Delete movie if movie ID found """
     
     movie_to_delete = DB.query(MovieModel).filter(id == MovieModel.id).first()
 

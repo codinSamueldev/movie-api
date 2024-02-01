@@ -3,15 +3,13 @@ from fastapi import FastAPI, Body, Path, Query, HTTPException, Depends
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
 from starlette import status
-from typing import Any, Coroutine, Optional, List, Annotated
+from typing import Any, Optional, List, Annotated
 
-from starlette.requests import Request
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from fastapi.encoders import jsonable_encoder
 from config.database import SessionLocal, engine, Base
 from models.movie import Movie as MovieModel
-from sqlalchemy.orm import Session
 from jwt_manager_auth import oauth2_bearer, get_current_user
+from middlewares.error_handler import ErrorHandler
 
 
 DB = SessionLocal()
@@ -24,6 +22,8 @@ app.include_router(jwt_manager_auth.router)
 app.title = "Basic API"
 #Also, we can modify its actual version.
 app.version = "0.0.0.1"
+
+app.add_middleware(ErrorHandler)
 
 Base.metadata.create_all(bind=engine)
 
@@ -60,30 +60,6 @@ class Movie(BaseModel):
                 "reseñas": 6.6
             }
         }
-
-movies = [
-    {
-        "id" : 1,
-        "nombre" : "Mi pobre angelito",
-        "año" : 2003,
-        "categoria" : "Humor/Risa/Comedia",
-        "reseñas" : 9.9
-    },
-    {
-        "id" : 2,
-        "nombre" : "Avengers Endgame",
-        "año" : 2018,
-        "categoria" : "Acción/Sci-Fi/Tragedia",
-        "reseñas" : 9
-    },
-    {
-        "id" : 3,
-        "nombre" : "Chicken Little",
-        "año" : 2005,
-        "categoria" : "Humor/Risa/Reflexion",
-        "reseñas" : 10
-    }
-]
 
 
 #Tags=[] help us to separate each endpoint in the documentation so we can see, verify and test each endpoint.
@@ -167,7 +143,6 @@ def get_movies_by_category(category: str = Query(min_length=5, max_length=20)):
 @app.post('/movies', tags=["Peliculas, chicles, tance"], response_model=dict, status_code=201)
 def post_movie(movie: Movie) -> dict:
 
-    DB = SessionLocal()
     new_movie = MovieModel(**movie.dict())
     DB.add(new_movie)
     DB.commit()

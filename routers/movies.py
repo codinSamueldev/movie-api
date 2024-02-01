@@ -7,6 +7,8 @@ from typing import Optional, List, Annotated
 from fastapi.encoders import jsonable_encoder
 from config.database import SessionLocal
 from models.movie import Movie as MovieModel
+from services.movie_services import MovieServices, GetMovieService
+from schemas.movie_schema import Movie
 from routers.jwt_manager_auth import oauth2_bearer
 
 
@@ -16,34 +18,12 @@ ID_EXCEPTION = HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Inva
 movies_router = APIRouter()
 
 
-class Movie(BaseModel):
-    #Set up atributtes
-    id: Optional[int] = None
-    #Validate data with Field() class.
-    nombre: str = Field(min_length=3, max_length=90)
-    año: int = Field()
-    categoria: str
-    reseñas: float
-
-    class Config:
-        #Seems like the name always should be schema_extra in order to represent an example.
-        schema_extra = {
-            "example": {
-                "nombre": "Pelicula",
-                "año": 2012,
-                "categoria": "Tragico/Suspenso",
-                "reseñas": 6.6
-            }
-        }
-
-
-
 #We can modify what kind of response should give the API.
 @movies_router.get('/movies', tags=["Peliculas, chicles, tance"], response_model=List[Movie], status_code=200)
 def get_movies(token: Annotated[str, Depends(oauth2_bearer)]) -> List[Movie]:
     """ Retrieve all movies stored in database. """
 
-    result = DB.query(MovieModel).all()
+    result = MovieServices(DB).get_movies()
     
     return JSONResponse(status_code=200, content=jsonable_encoder(result))
 
@@ -54,7 +34,7 @@ def get_movies(token: Annotated[str, Depends(oauth2_bearer)]) -> List[Movie]:
 def get_movie(id: int = Path(ge=1, le=2000)) -> Movie:
     """ Retrieve movie based on movie ID """
 
-    output_movie = DB.query(MovieModel).filter(id == MovieModel.id).first()
+    output_movie = GetMovieService(DB).get_movie(id)
     
     if not output_movie:
         raise ID_EXCEPTION
@@ -67,7 +47,7 @@ def get_movie(id: int = Path(ge=1, le=2000)) -> Movie:
 def get_movie_by_name(nombre: str,) -> Movie:
     """ Retrieve movie based on movie name """
     
-    output_movie = DB.query(MovieModel).filter(nombre == MovieModel.nombre).first()
+    output_movie = MovieServices(DB).get_movie_by_name_query(nombre)
 
     if not output_movie:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid movie name : (")
@@ -79,7 +59,7 @@ def get_movie_by_name(nombre: str,) -> Movie:
 def get_movies_by_category(category: str = Query(min_length=5, max_length=20)):
     """ Retrieve movie based on category """
 
-    output_movie = DB.query(MovieModel).filter(category == MovieModel.categoria).first()
+    output_movie = MovieServices(DB).get_movie_by_category_query(category)
 
     if not output_movie:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid movie category : (")
@@ -92,9 +72,7 @@ def get_movies_by_category(category: str = Query(min_length=5, max_length=20)):
 def post_movie(movie: Movie) -> dict:
     """ Add new movie """
 
-    new_movie = MovieModel(**movie.dict())
-    DB.add(new_movie)
-    DB.commit()
+    MovieServices(DB).add_movie(movie)
 
     return JSONResponse(content={"message": "Se ha registrado la pelicula..."}, status_code=201)
 
@@ -105,16 +83,12 @@ def post_movie(movie: Movie) -> dict:
 def update_movie(id: int, movie: Movie) -> dict:
     """ Update movie parameters (name, year, category, rating) """
 
-    movie_to_update = DB.query(MovieModel).filter(id == MovieModel.id).first()
+    movie_to_update = GetMovieService(DB).get_movie(id)
 
     if not movie_to_update:
         raise ID_EXCEPTION
     
-    movie_to_update.nombre = movie.nombre
-    movie_to_update.año = movie.año
-    movie_to_update.categoria = movie.categoria
-    movie_to_update.reseñas = movie.reseñas
-    DB.commit()
+    MovieServices(DB).update_a_movie(id, movie)
 
     return JSONResponse(content={"message": "Se ha actualizado la pelicula..."}, status_code=status.HTTP_202_ACCEPTED)
 
@@ -123,13 +97,12 @@ def update_movie(id: int, movie: Movie) -> dict:
 def delete_movie(id: int, token: Annotated[str, Depends(oauth2_bearer)]) -> dict:
     """ Delete movie if movie ID found """
     
-    movie_to_delete = DB.query(MovieModel).filter(id == MovieModel.id).first()
+    movie_to_delete = GetMovieService(DB).get_movie(id)
 
     if not movie_to_delete:
         raise ID_EXCEPTION
     
-    DB.delete(movie_to_delete)
-    DB.commit()
+    MovieServices(DB).delete_a_movie(id)
 
     return JSONResponse(content={"message": "Se ha eliminado la pelicula..."}, status_code=status.HTTP_200_OK)
 

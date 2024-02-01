@@ -1,4 +1,4 @@
-from routers import movies, jwt_manager_auth, html_endpoints
+from routers import movies, jwt_manager_auth, html_endpoints, users
 from fastapi import FastAPI, Body, Path, Query, HTTPException, Depends
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
@@ -17,6 +17,7 @@ app = FastAPI()
 app.include_router(jwt_manager_auth.security_router)
 app.include_router(movies.movies_router)
 app.include_router(html_endpoints.html_router)
+app.include_router(users.users_router)
 
 #Update the title of our API.
 app.title = "Basic API"
@@ -41,20 +42,8 @@ class User(BaseModel):
         }
 
 
-
 #Tags=[] help us to separate each endpoint in the documentation so we can see, verify and test each endpoint.
 @app.get('/', tags=["Casita"])
 def message():
     return "Holiiii"
-
-
-@app.get("/users/me", tags=["Users"], status_code=200)
-def user(current_user: Annotated[dict, Depends(get_current_user)]):
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, 
-            detail="User not found...", 
-            headers={"WWW-Authenticate": "Bearer"})
-    
-    return {"user": current_user}
 

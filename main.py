@@ -17,7 +17,7 @@ ID_EXCEPTION = HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Inva
 
 
 app = FastAPI()
-app.include_router(jwt_manager_auth.router)
+app.include_router(jwt_manager_auth.security_router)
 #Update the title of our API.
 app.title = "Basic API"
 #Also, we can modify its actual version.

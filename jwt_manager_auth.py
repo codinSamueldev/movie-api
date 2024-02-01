@@ -25,7 +25,7 @@ CREDENTIALS_EXCEPTION = HTTPException(
             headers={"WWW-Authenticate": "Bearer"})
 
 
-router = APIRouter(prefix="/auth", tags=["Authentication"])
+security_router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl="auth/token")
@@ -86,7 +86,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
 db_dependency = Annotated[Session, Depends(get_db)]
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@security_router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_user(db: db_dependency, create_user: CreateUserRequest):
     """ Create new user and store it in the database. """
     create_user_model = Users(
@@ -97,7 +97,7 @@ async def create_user(db: db_dependency, create_user: CreateUserRequest):
     db.commit()
 
 
-@router.post("/token", response_model=Token)
+@security_router.post("/token", response_model=Token)
 async def login_form(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: db_dependency):

@@ -1,4 +1,4 @@
-from routers import movies, jwt_manager_auth
+from routers import movies, jwt_manager_auth, html_endpoints
 from fastapi import FastAPI, Body, Path, Query, HTTPException, Depends
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
@@ -16,6 +16,8 @@ from middlewares.error_handler import ErrorHandler
 app = FastAPI()
 app.include_router(jwt_manager_auth.security_router)
 app.include_router(movies.movies_router)
+app.include_router(html_endpoints.html_router)
+
 #Update the title of our API.
 app.title = "Basic API"
 #Also, we can modify its actual version.
@@ -44,21 +46,6 @@ class User(BaseModel):
 @app.get('/', tags=["Casita"])
 def message():
     return "Holiiii"
-
-
-@app.get('/test')
-def message():
-    return {"Testeo": "Si funciona"}
-
-#Return HTML code
-@app.get('/html', tags=["HTML"])
-def message():
-    return HTMLResponse("""
-
-    <h1>Al parecer, funciona.</h1>
-    <figure>
-        <div style="background: black; width: 35%; height: 51%; border-radius: 35%"></div>
-    </figure> """)
 
 
 @app.get("/users/me", tags=["Users"], status_code=200)
